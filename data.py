@@ -1,6 +1,42 @@
 import pandas as pd
 import numpy as np
 import node
+from sklearn.preprocessing import StandardScaler
+
+team_locations = {
+    "Arizona": 1,
+    "Atlanta": 2,
+    "Baltimore": 3,
+    "Buffalo": 4,
+    "Carolina": 5,
+    "Chicago": 6,
+    "Cincinnati": 7,
+    "Cleveland": 8,
+    "Dallas": 9,
+    "Denver": 10,
+    "Detroit": 11,
+    "Green Bay": 12,
+    "Houston": 13,
+    "Indianapolis": 14,
+    "Jacksonville": 15,
+    "Kansas City": 16,
+    "Las Vegas": 17,
+    "LA Chargers": 18,
+    "LA Rams": 19,
+    "Miami": 20,
+    "Minnesota": 21,
+    "New England": 22,
+    "New Orleans": 23,
+    "NY Giants": 24,
+    "NY Jets": 25,
+    "Philadelphia": 26,
+    "Pittsburgh": 27,
+    "San Francisco": 28,
+    "Seattle": 29,
+    "Tampa Bay": 30,
+    "Tennessee": 31,
+    "Washington": 32
+}
 
 def get_matrix(g):
     arr = []
@@ -45,42 +81,6 @@ def massey_method(A, b):
 
 
 def main():
-
-    team_locations = {
-        "Arizona": 1,
-        "Atlanta": 2,
-        "Baltimore": 3,
-        "Buffalo": 4,
-        "Carolina": 5,
-        "Chicago": 6,
-        "Cincinnati": 7,
-        "Cleveland": 8,
-        "Dallas": 9,
-        "Denver": 10,
-        "Detroit": 11,
-        "Green Bay": 12,
-        "Houston": 13,
-        "Indianapolis": 14,
-        "Jacksonville": 15,
-        "Kansas City": 16,
-        "Las Vegas": 17,
-        "LA Chargers": 18,
-        "LA Rams": 19,
-        "Miami": 20,
-        "Minnesota": 21,
-        "New England": 22,
-        "New Orleans": 23,
-        "NY Giants": 24,
-        "NY Jets": 25,
-        "Philadelphia": 26,
-        "Pittsburgh": 27,
-        "San Francisco": 28,
-        "Seattle": 29,
-        "Tampa Bay": 30,
-        "Tennessee": 31,
-        "Washington": 32
-    }
-
 
     # Load the CSV file
     df = pd.read_csv('nfl_scores.csv')
@@ -190,9 +190,44 @@ def main():
     largest_values = sol[indices]
 
     print('Massey rankings:')
+
+
     # Print the largest 5 values and their indices
     for idx, val in zip(indices, largest_values):
         print(f"Index: {idx}, Value: {val}")
+
+   # Step 1: Load the data
+    teamstats_df = pd.read_csv('teamstats.csv')
+
+    # Step 2: Remove the 'team' column
+    teamstats_df = teamstats_df.drop(columns=['team'])
+
+    # Convert percentage columns to numeric
+    percent_cols = ['rzp', 'orzp', 'fgp']  # Specify the columns with percentages
+    for col in percent_cols:
+        teamstats_df[col] = teamstats_df[col].str.replace('%', '').astype(float) / 100
+
+    # Convert 'atop' column to seconds
+    teamstats_df['atop'] = pd.to_timedelta(teamstats_df['atop'])
+    teamstats_df['atop'] = teamstats_df['atop'].dt.total_seconds()
+
+    # Step 3: Scale stats
+    scaler = StandardScaler()
+    normalized_stats = scaler.fit_transform(teamstats_df)
+
+    # Step 4: Append all remaining column entries to a list
+    data_list = normalized_stats.tolist()
+
+    # Step 5: Convert the list to a NumPy matrix
+    stat_matrix = np.array(data_list).reshape(32, 8)  # Assuming 32 teams and 8 stats
+
+    # Step 6: Solve the matrix equation (stat_matrix * weights = rankings)
+    # Solve for the weights using numpy.linalg.solve
+    pr_sol = np.linalg.lstsq(stat_matrix, vec)
+    mm_sol = np.linalg.lstsq(stat_matrix, sol)
+
+    print("Solutions for PageRank:", pr_sol[0] * 500)
+    print("Solutions for Massey:", mm_sol[0])
 
 if __name__=="__main__":
     main()
