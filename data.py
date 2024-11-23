@@ -156,6 +156,7 @@ def main():
 
     matrix = get_matrix(g)
     A = normalize_matrix(matrix)
+    print(A)
 
     # Compute eigenvalues and eigenvectors
     eigenvalues, eigenvectors = np.linalg.eig(A)
@@ -170,7 +171,9 @@ def main():
     else:
         print("Eigenvalue 1 not found.")
 
-        # Get the indices of the largest 5 values
+    print(vec)
+
+    # Get the indices of the largest 5 values
     indices = np.argsort(vec)[-5:]  # Get indices of the largest 5 elements
 
     # Get the largest 5 values
